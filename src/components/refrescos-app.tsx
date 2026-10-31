@@ -16,6 +16,7 @@ import {
   Wifi,
   WifiOff,
   AlertTriangle,
+  Download,
   Loader2,
 } from "lucide-react";
 import { initDatabase } from "@/lib/localdb";
@@ -47,11 +48,18 @@ const subscribeOnline = (cb: () => void) => {
 
 const subscribeNoop = () => () => {};
 
+type InstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+};
+
 export default function RefrescosApp() {
   const [ready, setReady] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("painel");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
+  const [showIosInstall, setShowIosInstall] = useState(false);
   const online = useSyncExternalStore(
     subscribeOnline,
     () => navigator.onLine,
@@ -78,12 +86,36 @@ export default function RefrescosApp() {
       });
   }, []);
 
+  useEffect(() => {
+    const onBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as InstallPromptEvent);
+    };
+    const isIos =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+    setShowIosInstall(isIos && !isStandalone);
+    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+    return () => window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+  }, []);
+
   const bump = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   const go = useCallback((t: Tab) => {
     setTab(t);
     window.scrollTo({ top: 0 });
   }, []);
+
+  const installApp = async () => {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    await installPrompt.userChoice;
+    setInstallPrompt(null);
+  };
 
   if (!ready) {
     return (
@@ -142,6 +174,37 @@ export default function RefrescosApp() {
 
         {/* Conteúdo */}
         <main className="flex-1 px-4 pt-4 pb-28">
+          {(installPrompt || showIosInstall) && (
+            <section className="mb-4 rounded-2xl border border-orange-200 bg-orange-50 p-3">
+              <div className="flex items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-600 text-white">
+                  <Download className="h-4 w-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-orange-950">
+                    Instale para usar sem internet
+                  </p>
+                  {showIosInstall ? (
+                    <p className="mt-0.5 text-xs leading-relaxed text-orange-800">
+                      No Safari, toque em Partilhar e escolha “Adicionar ao EcrÃ£ Principal”.
+                    </p>
+                  ) : (
+                    <p className="mt-0.5 text-xs leading-relaxed text-orange-800">
+                      Instale a aplicaÃ§Ã£o neste aparelho para abrir como uma app normal.
+                    </p>
+                  )}
+                </div>
+                {installPrompt && (
+                  <button
+                    onClick={installApp}
+                    className="shrink-0 rounded-lg bg-orange-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-orange-700"
+                  >
+                    Instalar
+                  </button>
+                )}
+              </div>
+            </section>
+          )}
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={tab}

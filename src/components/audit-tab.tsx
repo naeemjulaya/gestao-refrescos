@@ -13,6 +13,7 @@ import {
   SlidersHorizontal,
   Flag,
   Database,
+  Trash2,
 } from "lucide-react";
 import { getDb } from "@/lib/localdb";
 import type { AuditEntry, AuditType, AccountingSession, Product } from "@/lib/types";
@@ -141,6 +142,7 @@ export default function AuditTab({ refreshKey }: { refreshKey: number }) {
   const [filter, setFilter] = useState<"todas" | AuditType>("todas");
   const fileRef = useRef<HTMLInputElement>(null);
   const [pendingImport, setPendingImport] = useState<unknown>(null);
+  const [entryToDelete, setEntryToDelete] = useState<AuditEntry | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -247,6 +249,16 @@ export default function AuditTab({ refreshKey }: { refreshKey: number }) {
     setSessions(ss);
     setPendingImport(null);
     toast({ title: "Cópia importada", description: "Os dados foram restaurados." });
+  };
+
+  const deleteAuditEntry = async () => {
+    if (!entryToDelete?.id) return;
+    await getDb().audit.delete(entryToDelete.id);
+    setEntries((current) =>
+      current ? current.filter((entry) => entry.id !== entryToDelete.id) : current
+    );
+    setEntryToDelete(null);
+    toast({ title: "Registo removido", description: "A conta e o stock não foram alterados." });
   };
 
   if (!entries) {
@@ -368,6 +380,13 @@ export default function AuditTab({ refreshKey }: { refreshKey: number }) {
                         {fmtDateTime(e.ts)}
                       </p>
                     </div>
+                    <button
+                      onClick={() => setEntryToDelete(e)}
+                      aria-label={`Remover ${e.title}`}
+                      className="rounded-lg p-2 text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </CardContent>
                 </Card>
               </li>
@@ -399,6 +418,28 @@ export default function AuditTab({ refreshKey }: { refreshKey: number }) {
               className="bg-orange-600 hover:bg-orange-700"
             >
               Importar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={entryToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setEntryToDelete(null);
+        }}
+      >
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover este registo da auditoria?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isto apaga apenas esta linha da auditoria. As contas, produtos e stock não serão alterados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteAuditEntry} className="bg-red-600 hover:bg-red-700">
+              Remover registo
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

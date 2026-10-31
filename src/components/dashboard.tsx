@@ -115,6 +115,7 @@ export default function Dashboard({
   const monthRevenue = monthSessions.reduce((s, x) => s + x.revenue, 0);
   const monthProfit = monthSessions.reduce((s, x) => s + x.profit, 0);
   const monthInvest = monthSessions.reduce((s, x) => s + x.purchaseCost, 0);
+  const monthCashInHand = monthRevenue - monthInvest;
 
   const totalCostValue = products.reduce(
     (s, p) => s + productEconomics(p).stockCostValue,
@@ -165,10 +166,13 @@ export default function Dashboard({
               <StatMini label="Faturamento" value={mt(last.revenue)} tone="orange" />
               <StatMini label="Lucro" value={mt(last.profit)} tone="green" />
               <StatMini
-                label="Em mão após compras"
+                label="Dinheiro em mão"
                 value={mt(last.netCash)}
                 tone="neutral"
               />
+              <p className="col-span-3 text-center text-[10px] text-muted-foreground">
+                Faturamento menos investimento para repor o stock.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -194,10 +198,11 @@ export default function Dashboard({
       <Card>
         <CardContent className="p-4">
           <h3 className="text-sm font-semibold">Este mês ({monthSessions.length} {monthSessions.length === 1 ? "conta" : "contas"})</h3>
-          <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="mt-3 grid grid-cols-2 gap-2">
             <StatMini label="Faturamento" value={mt(monthRevenue)} tone="orange" />
             <StatMini label="Lucro" value={mt(monthProfit)} tone="green" />
             <StatMini label="Investido" value={mt(monthInvest)} tone="amber" />
+            <StatMini label="Dinheiro em mão" value={mt(monthCashInHand)} tone="green" />
           </div>
         </CardContent>
       </Card>

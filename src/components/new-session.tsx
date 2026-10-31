@@ -10,6 +10,7 @@ import {
   Loader2,
   PackageOpen,
   ArrowRight,
+  Download,
 } from "lucide-react";
 import { getDb, addAudit } from "@/lib/localdb";
 import type { Product, AccountingSession } from "@/lib/types";
@@ -41,6 +42,39 @@ function toCounts(
   for (const k of Object.keys(breakage)) outB[Number(k)] = toInt(breakage[Number(k)]);
   for (const k of Object.keys(packs)) outP[Number(k)] = toInt(packs[Number(k)]);
   return { counted: out, breakage: outB, packs: outP };
+}
+
+function downloadPurchaseReport(session: AccountingSession) {
+  const purchases = session.items.filter((item) => item.packsPurchased > 0);
+  const lines = [
+    "PEDIDO DE REPOSIÇÃO DE STOCK",
+    `Data: ${fmtDateLong(session.date)}`,
+    "",
+    "Comprar:",
+    ...(purchases.length > 0
+      ? purchases.map(
+          (item) =>
+            `- ${item.productName}: ${item.packsPurchased} fardo(s) × ${mt(
+              item.purchaseCost / item.packsPurchased
+            )} = ${mt(item.purchaseCost)} | stock após compra: ${fmtInt(
+              item.stockAfter
+            )} garrafas`
+        )
+      : ["- Não é necessário comprar stock nesta conta."]),
+    "",
+    `Faturamento recebido: ${mt(session.revenue)}`,
+    `Valor para comprar stock: ${mt(session.purchaseCost)}`,
+    `Dinheiro que sobra para entregar: ${mt(session.netCash)}`,
+    "",
+    "Resumo: entregue o valor de compra acima para repor o stock e envie o dinheiro que sobra.",
+  ];
+  const blob = new Blob([lines.join("\r\n")], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `pedido-stock-${session.date}.txt`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export default function NewSession({
@@ -225,6 +259,14 @@ export default function NewSession({
                 </Badge>
               ))}
             </div>
+            <Button
+              variant="outline"
+              onClick={() => downloadPurchaseReport(saved)}
+              className="mt-4 h-10 border-orange-200 bg-white text-orange-700 hover:bg-orange-50"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Baixar pedido de compra (TXT)
+            </Button>
           </CardContent>
         </Card>
         <div className="grid grid-cols-2 gap-3">

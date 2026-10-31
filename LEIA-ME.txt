@@ -1,0 +1,47 @@
+GESTÃO DE REFRESCOS — aplicação offline (PWA)
+=================================================
+
+O QUE É
+Aplicação para gerir o negócio de refrescos: contagem de stock,
+faturamento, lucro das vendas, compra de fardos e auditoria de tudo.
+Funciona SEM INTERNET e os dados ficam guardados apenas no próprio
+aparelho (nada é enviado para a nuvem).
+
+COMO USAR NO TELEMÓVEL (opção mais fácil)
+1. Abra o link da aplicação no navegador do telemóvel.
+2. Android (Chrome): menu ⋮ → "Instalar aplicação" / "Adicionar ao ecrã
+   principal".
+   iPhone (Safari): botão partilhar → "Adicionar ao Ecrã Principal".
+3. Pronto: abre como uma aplicação normal, mesmo sem internet.
+
+COMO COLOCAR NO SEU PRÓPRIO ENDEREÇO (hospedagem própria)
+A pasta "site-pronto" contém a aplicação já construída e pronta a usar.
+  • Arraste a pasta site-pronto para https://app.netlify.com/drop
+    (grátis, sem cartão) ou envie-a para qualquer hospedagem de sites.
+  • Depois abra o endereço no telemóvel e instale como explicado acima.
+
+COMO RECONSTRUIR A PARTIR DO CÓDIGO (opcional, para técnicos)
+Requisitos: Node.js 20 ou superior.
+  npm install
+  STATIC_EXPORT=1 npm run build
+  → o site pronto fica na pasta "out/"
+
+NOVO NESTA VERSÃO
+  • O fardo de Garrafinha PET tem 12 garrafas (não 24).
+    → Custo: 240,00 MT por fardo = 20,00 MT por garrafa
+    → Lucro: 10,00 MT por garrafa (33%) = 120,00 MT por fardo
+  • Quem já usava a aplicação recebe a correção automaticamente ao
+    abrir a nova versão; a mudança fica registada na Auditoria.
+  • Stock inicial do PET: 6 fardos × 12 = 72 garrafas.
+
+CÓPIAS DE SEGURANÇA (IMPORTANTE)
+No separador "Auditoria" toque em "Exportar cópia completa (JSON)" e
+guarde o ficheiro (pode enviar para WhatsApp para si próprio). Faça isto
+regularmente — os dados não saem do aparelho, por isso a cópia é a única
+proteção se o telemóvel se perder ou avariar. Para recuperar, use
+"Importar cópia (JSON)" no mesmo separador.
+
+TABELA DE PREÇOS ATUAL
+  Refresco 2 Litros  : 110,00 MT/garrafa · fardo 560,00 MT com 6
+  Refresco 1 Litro   :  75,00 MT/garrafa · fardo 315,00 MT com 6
+  Garrafinha PET     :  30,00 MT/garrafa · fardo 240,00 MT com 12
